@@ -5,21 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>WHATWEB TITLE</title>
 <style>
-/* [C1] Biến màu/font + reset + nền trang. Đổi giao diện: chỉ cần sửa 3 biến màu ở đây. */
+/* Font + Reset + Background */
 :root{
-  /* [FIX-02] Bản cũ đặt tên --amber* nhưng giá trị là navy, kèm glow/scanline cam. Nay: trắng đen, tên đúng nghĩa. */
-  --paper:#fff;  /* nền */
-  --ink:#000;    /* chữ chính + viền */
-  --grey:#555;   /* chữ phụ (tag, chú thích), tương phản ~7.4:1 trên nền trắng */
-  --font:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace; /* [FIX-03] font hệ thống, bỏ Google Fonts */
+  --paper:#fff;  /* Background */
+  --ink:#000;    /* Font + Edge */
+  --grey:#555;   /* Tag/Note + tương phản ~7.4:1 */
+  --font:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace; /* System Fonts */
 }
 *{box-sizing:border-box}
 html{background:var(--paper)}
-/* [FIX-01] bản cũ dùng var(--light-cyan) chưa khai báo. [FIX-04] chỉ body là flex (trước đây html+body cùng flex+padding). */
+/* Just read this elements man.  */
 body{margin:0;padding:20px;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
   background:var(--paper);color:var(--ink);font-family:var(--font)}
 
-/* [C2] Khung terminal, thanh trên (tên + nút), tiêu đề, phụ đề */
+/* Terminal + thanh trên (tên + nút) + Header, phụ đề */
 .terminal{width:100%;max-width:760px;background:var(--paper);border:2px solid var(--ink);padding:22px 24px 18px}
 .topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ink);
   padding-bottom:8px;margin-bottom:14px;font-size:12px;letter-spacing:.06em;color:var(--grey)}
@@ -31,18 +30,17 @@ body{margin:0;padding:20px;min-height:100vh;min-height:100dvh;display:flex;align
 h1{font-size:48px;line-height:1;letter-spacing:.03em;margin:2px 0}
 .subtitle{font-size:13px;color:var(--grey);margin-bottom:16px}
 
-/* [C3] Vùng log cuộn + kiểu từng loại dòng (JS chỉ gắn class, không gắn style) */
+/* Vùng log cuộn + kiểu từng loại dòng (JS chỉ gắn class, không gắn style) */
 #log{height:320px;overflow-y:auto;padding-right:6px;margin-bottom:10px;font-size:14.5px;line-height:1.55;
   scrollbar-width:thin;scrollbar-color:var(--ink) var(--paper)}
-/* [FIX-06] word-break:break-word lỗi thời -> overflow-wrap; dòng trống nay có chiều cao thật (trước đây cao 0px). */
+/* overflow-wrap */
 .line{white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:2px}
 .line:empty{min-height:1.55em}
 .sys,.tag,.reply-note{color:var(--grey)}
 .reply-main{font-weight:700}
 .reply-note{padding-left:16px;font-size:13px;margin-bottom:10px}
-/* [FIX-05] Đã xóa CSS chết/hiệu ứng CRT: .cursor, @keyframes blink, flicker, scanline. */
 
-/* [C4] Hàng nhập (ẩn tới khi boot xong), ô input, chân trang, màn nhỏ, giảm chuyển động */
+/* Hàng nhập (ẩn tới khi boot xong), ô input, chân trang, màn nhỏ, giảm chuyển động */
 .input-row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--ink);padding-top:10px;opacity:0;transition:opacity .4s ease}
 .input-row.ready{opacity:1}
 .prompt-label{font-weight:700;white-space:nowrap}
@@ -61,7 +59,7 @@ h1{font-size:48px;line-height:1;letter-spacing:.03em;margin:2px 0}
 <!-- [H1] Cấu trúc giao diện: topbar > h1 > subtitle > #log > form#inputRow > footer. Chữ tĩnh sửa trực tiếp tại đây. -->
 <div class="terminal">
   <div class="topbar">
-    <span>TERMINAL &middot; <b>WHATWEB</span>  <!-- [FIX-07] thêm khoảng trắng sau "TERMINAL" -->
+    <span>TERMINAL &middot; <b>WHATWEB</span> 
     <button class="hangup" id="hangupBtn" type="button">BUTTON</button>
   </div>
   <h1>WHATWEB</h1>
@@ -85,7 +83,21 @@ const CONFIG = {
   noteArrow: "→ ",
   clockLabel: "TIME TO CONNECTION",
   speedBoot: 14, speedReply: 18,   // ms mỗi ký tự
-  thinkDelay: 300, bootPause: 180  // ms
+  thinkDelay: 300, bootPause: 180,  // ms
+
+  defaultName: "USER",
+  namePrompt: "WHAT SHOULD I CALL YOU, BAE~ (OR JUST ENTER -_-)",
+  nameGreeting: name => `HALLOOO ${name}.`,
+  nameChanged: name => `YOUR NAME IS "${name}".`,
+  unknownCommand: cmd => `USE "/${cmd}" FOR COMMAND. (/help)`,
+  helpHeader: "THIS:",
+  historyEmpty: "Hmmm... have no any history btw.",
+  gameHint: "TEXT and ENTER. (/exit for EXIT)",
+  gameInvalidChoice: name => 'Tch... invalid choice, ${name}.',
+  gameLocked: "I will meet you tommorow, haha.",
+  gameQuit: "You get a kickass, just can chat now.",
+  gameFarewell: name => `Cya, ${name}.`,
+  chatExitMsg: "Verbindung kappen. BUTTON for again.",
 };
 
 // [J2] Dữ liệu: danh mục từ khóa -> câu đáp. [FIX-14] field `fr` đổi thành `reply` (nội dung hiện không phải tiếng Pháp).
@@ -138,7 +150,170 @@ async function typeInto(el, text, speed, sid){   // [FIX-13] một hàm gõ ch�
   return sid === session;
 }
 
-// [J5] Luồng hội thoại: runBoot (lời chào) và handleSubmit (người dùng -> WHATWEB)
+let mode = "name";
+function setMode(next){
+  mode = next;
+  userInput.placeholder =
+    next === "name" ? "NAME and ENTER..." :
+    next === "game" ? "NUMBER and ENTER, or /exit..." :
+    "/help for command or just chatting... :v";
+}
+
+const DB_PREFIX = "WHATWEB:";
+const Store = {
+  get(key, fallback = null){
+    try { const v = localStorage.getItem(DB_PREFIX + key); return v === null ? fallback : JSON.parse(v); }
+    catch { return fallback; }
+  },
+  set(key, value){
+    try { localStorage.setItem(DB_PREFIX + key, JSON.stringify(value)); return true; }
+    catch { return false; } // hết dung lượng, hoặc chế độ duyệt web riêng tư chặn localStorage
+  },
+};
+
+const MAX_LOG = 200;
+function logMessage(who, text){
+  const hist = Store.get("history", []);
+  hist.push({ who, text, ts: Date.now() });
+  Store.set("history", hist.slice(-MAX_LOG));
+}
+function showHistory(n){
+  const hist = Store.get("history", []).slice(-n);
+  if (!hist.length){ addLine("sys", CONFIG.historyEmpty); return; }
+  hist.forEach(h => addLine("sys", `[${new Date(h.ts).toLocaleTimeString("vi-VN")}] ${h.who}: ${h.text}`));
+}
+
+// [N1] Luồng hỏi tên — MỚI. Chạy một lần khi chưa có tên lưu trong Store.
+async function submitName(text, sid){
+  const name = (text || CONFIG.defaultName).trim().slice(0, 24) || CONFIG.defaultName;
+  Store.set("name", name);
+  addLine("you").append(span("tag", CONFIG.youTag), text || "(bỏ trống)");
+  toBottom();
+  await sleep(CONFIG.thinkDelay);
+  if (sid !== session) return;
+  if (!(await typeInto(addLine("sys"), CONFIG.nameGreeting(name), CONFIG.speedReply, sid))) return;
+  addLine("sys"); addLine("sys", CONFIG.hint); addLine("sys");
+  setMode("chat");
+  inputRow.classList.add("ready"); userInput.disabled = false; userInput.focus();
+}
+function setName(newName){   // dùng cho lệnh /name khi đang chat, khác với submitName (lúc mới vào)
+  const name = (newName || CONFIG.defaultName).trim().slice(0, 24) || CONFIG.defaultName;
+  Store.set("name", name);
+  addLine("sys", CONFIG.nameChanged(name));
+}
+
+// [CMD1] Mọi tin nhắn bắt đầu bằng "/" được coi là LỆNH thay vì chat thường —
+// MỚI. Cú pháp: /tên_lệnh tham_số... Thêm lệnh mới = thêm một mục vào đây.
+const COMMANDS = {
+  help:    { desc: "Command list.",
+             run: () => { addLine("sys", CONFIG.helpHeader);
+                           Object.entries(COMMANDS).forEach(([k, v]) => addLine("sys", `  /${k} — ${v.desc}`)); } },
+  name:    { desc: "Name changing. /name <new-name>, or just nothing, whatever.",
+             run: args => setName(args.join(" ")) },
+  clear:   { desc: "Clear your log (not for history)",
+             run: () => log.replaceChildren() },
+  history: { desc: "Watching n history lines mostly, default is 10. /history 20",
+             run: args => showHistory(Number(args[0]) || 10) },
+  game:    { desc: "Start game...  haha.",
+             run: () => startGame() },
+  exit:    { desc: "Bye bye chatting~ (not for minigame — just /exit while playing)",
+             run: () => { addLine("sys", CONFIG.chatExitMsg); inputRow.classList.remove("ready"); userInput.disabled = true; } },
+};
+function runCommand(raw){
+  const [cmd, ...args] = raw.slice(1).trim().split(/\s+/);
+  const entry = COMMANDS[(cmd || "").toLowerCase()];
+  if (!entry){ addLine("sys", CONFIG.unknownCommand(cmd || "")); return; }
+  entry.run(args);
+}
+
+// [GAME1] ĐỊNH DẠNG CỐT TRUYỆN — đây là phần bạn sẽ thay bằng kịch bản của
+// mình. Mỗi "node" là một đoạn thoại:
+//   lines:   mảng chuỗi, gõ ra lần lượt (hỗ trợ "{name}" -> tên người chơi)
+//   choices: mảng [{label, next}], next là id của node kế tiếp
+//   end:     true nếu đây là node KẾT THÚC game (không có choices)
+// STORY_START_NODE là node bắt đầu. Dưới đây chỉ là VÍ DỤ 5 node để bạn thấy
+// đúng hình dạng dữ liệu — xoá và thay bằng cốt truyện thật của bạn.
+const STORY_START_NODE = "start";
+const STORY = {
+  start: {
+    lines: ["Một đêm mưa, {name} nhận được một tin nhắn lạ...", "Bạn có muốn mở nó không?"],
+    choices: [
+      { label: "Mở tin nhắn", next: "open" },
+      { label: "Bỏ qua, tắt máy", next: "end_ignore" },
+    ],
+  },
+  open: {
+    lines: ["Tin nhắn chỉ có một dòng: 'Đừng tin ai.'"],
+    choices: [
+      { label: "Trả lời 'Ai đó?'", next: "end_reply" },
+      { label: "Chặn số lạ", next: "end_block" },
+    ],
+  },
+  end_ignore: { lines: ["Bạn tắt máy đi ngủ. Có lẽ đó là lựa chọn khôn ngoan nhất."], end: true },
+  end_reply:  { lines: ["Không có phản hồi nào nữa... cho đến ngày mai."], end: true },
+  end_block:  { lines: ["Số lạ bị chặn. Nhưng một số khác đã nhắn tới..."], end: true },
+};
+
+// [GAME2] Bộ máy chạy cốt truyện — KHÔNG CẦN SỬA phần này khi viết kịch bản
+// mới, chỉ cần sửa STORY ở trên. gameState giữ node hiện tại.
+let gameState = null;
+function todayKey(){ return new Date().toISOString().slice(0, 10); }
+function isGameLockedToday(){ return Store.get("lastPlayed") === todayKey(); }
+
+async function startGame(){
+  if (isGameLockedToday()){ addLine("sys", CONFIG.gameLocked); return; }
+  gameState = { node: STORY_START_NODE };
+  setMode("game");
+  await playNode();
+}
+
+async function playNode(){
+  const sid = session;
+  const node = STORY[gameState.node];
+  const name = Store.get("name", CONFIG.defaultName);
+  for (const raw of node.lines){
+    const text = raw.replaceAll("{name}", name);
+    if (!(await typeInto(addLine("sys"), text, CONFIG.speedReply, sid))) return;
+    await sleep(reducedMotion() ? 0 : CONFIG.bootPause);
+    if (sid !== session) return;
+  }
+  if (node.end){ await endGame(); return; }
+  node.choices.forEach((c, i) => addLine("sys", `  ${i + 1}. ${c.label}`));
+  addLine("sys", CONFIG.gameHint);
+}
+
+// [GAME3] Nhận input khi đang ở mode "game" — gọi từ handleSubmit (J6 mới).
+function handleGameInput(text){
+  if (text.trim().toLowerCase() === "/exit"){ quitGame(); return; }
+  const node = STORY[gameState.node];
+  const idx = Number(text) - 1;
+  const choice = node.choices?.[idx];
+  if (!choice){ addLine("sys", CONFIG.gameInvalidChoice); return; }
+  gameState.node = choice.next;
+  playNode();
+}
+function quitGame(){   // thoát giữa chừng — KHÔNG tính là đã chơi hôm nay, không khoá /game
+  addLine("sys", CONFIG.gameQuit);
+  gameState = null;
+  setMode("chat");
+}
+
+// [GAME4] Kết thúc thật (đi tới một node end:true) — khoá /game tới ngày mai
+// và "kick" người chơi: khoá luôn ô nhập, không tự mở lại. Có thử window.close()
+// nhưng đa số trình duyệt CHẶN đóng tab không do script mở — xem README.
+async function endGame(){
+  const name = Store.get("name", CONFIG.defaultName);
+  Store.set("lastPlayed", todayKey());
+  gameState = null;
+  addLine("sys");
+  await typeInto(addLine("sys"), CONFIG.gameFarewell(name), CONFIG.speedReply, session);
+  inputRow.classList.remove("ready");
+  userInput.disabled = true;
+  setTimeout(() => { try { window.close(); } catch {} }, 1500);
+}
+
+// [J5] runBoot — ĐƯỢC VIẾT LẠI: boot xong thì hỏi tên (nếu chưa có tên lưu),
+// rồi mới mở chat. Nếu đã có tên từ lần trước (localStorage) thì bỏ qua bước hỏi.
 async function runBoot(){
   const sid = session;
   for (const text of CONFIG.bootLines){
@@ -146,37 +321,69 @@ async function runBoot(){
     await sleep(reducedMotion() ? 0 : CONFIG.bootPause);
     if (sid !== session) return;
   }
-  addLine("sys"); addLine("sys", CONFIG.hint); addLine("sys");
+  const saved = Store.get("name");
+  if (saved){
+    addLine("sys"); addLine("sys", CONFIG.hint); addLine("sys");
+    setMode("chat");
+    inputRow.classList.add("ready"); userInput.disabled = false; userInput.focus();
+    return;
+  }
+  setMode("name");
+  if (!(await typeInto(addLine("sys"), CONFIG.namePrompt, CONFIG.speedBoot, sid))) return;
   inputRow.classList.add("ready"); userInput.disabled = false; userInput.focus();
 }
+
+// [J6] handleSubmit — ĐƯỢC VIẾT LẠI: phân luồng theo mode (name/game/chat),
+// trong "chat" thì "/..." đi vào lệnh (CMD1), còn lại đi vào chat thường như cũ.
 async function handleSubmit(ev){
   ev.preventDefault();
   const text = userInput.value.trim();
-  if (!text) return;
   const sid = session;
-  userInput.value = ""; userInput.disabled = true;
+  userInput.value = "";
 
-  addLine("you").append(span("tag", CONFIG.youTag), text);   // append(chuỗi) tạo text node: an toàn, không HTML injection
+  if (mode === "name"){ userInput.disabled = true; await submitName(text, sid); return; }
+  if (!text) return;
+  userInput.disabled = true;
+
+  if (mode === "game"){
+    addLine("you").append(span("tag", CONFIG.youTag), text); toBottom();
+    handleGameInput(text);
+    userInput.disabled = false; userInput.focus();
+    return;
+  }
+
+  addLine("you").append(span("tag", CONFIG.youTag), text);
   toBottom();
+
+  if (text.startsWith("/")){
+    runCommand(text);
+    userInput.disabled = false; userInput.focus();
+    return;
+  }
+
+  logMessage(Store.get("name", CONFIG.defaultName), text);   // [DB2] chỉ log chat thật, không log lệnh
   await sleep(CONFIG.thinkDelay);
   if (sid !== session) return;
-
   const reply = pickReply(text), line = addLine("WHATWEB"), main = span("reply-main", "");
   line.append(span("tag", CONFIG.WHATWEBTag), main);
   if (!(await typeInto(main, reply.reply, CONFIG.speedReply, sid))) return;
   addLine("reply-note", CONFIG.noteArrow + reply.vi);
+  logMessage("WHATWEB", reply.reply);
   userInput.disabled = false; userInput.focus();
 }
 
-// [J6] Gắn sự kiện, đồng hồ, khởi động
-inputRow.addEventListener("submit", handleSubmit);   // [FIX-08] submit thay cho keydown Enter
+// [J7] Gắn sự kiện, đồng hồ, khởi động — GIỮ NGUYÊN, chỉ thêm gameState=null
+// vào handler của nút BUTTON (EXT-02) để không còn kẹt ở minigame cũ sau khi
+// bấm "hangup". Lưu ý: hangup KHÔNG xoá tên đã lưu — reconnect không hỏi lại tên.
+inputRow.addEventListener("submit", handleSubmit);
 let startedAt = Date.now();
-function renderClock(){   // [FIX-12] tính từ Date.now(): không trôi, có khoảng trắng, reset được
+function renderClock(){
   const s = Math.floor((Date.now() - startedAt) / 1000), p = n => String(n).padStart(2, "0");
   clockEl.textContent = `${CONFIG.clockLabel} ${p(Math.floor(s / 60))}:${p(s % 60)}`;
 }
 hangupBtn.addEventListener("click", () => {
-  session++;                              // hủy mọi tác vụ đang gõ dở
+  session++;
+  gameState = null;                        // [EXT-02]
   log.replaceChildren(); userInput.value = "";
   inputRow.classList.remove("ready"); userInput.disabled = true;
   startedAt = Date.now(); renderClock();
