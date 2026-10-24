@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHATWEB TITLE</title>
+<style>
+/* [C1] Biến màu/font + reset + nền trang. Đổi giao diện: chỉ cần sửa 3 biến màu ở đây. */
+:root{
+  /* [FIX-02] Bản cũ đặt tên --amber* nhưng giá trị là navy, kèm glow/scanline cam. Nay: trắng đen, tên đúng nghĩa. */
+  --paper:#fff;  /* nền */
+  --ink:#000;    /* chữ chính + viền */
+  --grey:#555;   /* chữ phụ (tag, chú thích), tương phản ~7.4:1 trên nền trắng */
+  --font:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace; /* [FIX-03] font hệ thống, bỏ Google Fonts */
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+/* [FIX-01] bản cũ dùng var(--light-cyan) chưa khai báo. [FIX-04] chỉ body là flex (trước đây html+body cùng flex+padding). */
+body{margin:0;padding:20px;min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;
+  background:var(--paper);color:var(--ink);font-family:var(--font)}
+
+/* [C2] Khung terminal, thanh trên (tên + nút), tiêu đề, phụ đề */
+.terminal{width:100%;max-width:760px;background:var(--paper);border:2px solid var(--ink);padding:22px 24px 18px}
+.topbar{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--ink);
+  padding-bottom:8px;margin-bottom:14px;font-size:12px;letter-spacing:.06em;color:var(--grey)}
+.topbar b{color:var(--ink)}
+.hangup{background:var(--paper);border:1px solid var(--ink);color:var(--ink);font:11px var(--font);
+  letter-spacing:.06em;padding:4px 8px;cursor:pointer}
+.hangup:hover{background:var(--ink);color:var(--paper)}
+.hangup:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+h1{font-size:48px;line-height:1;letter-spacing:.03em;margin:2px 0}
+.subtitle{font-size:13px;color:var(--grey);margin-bottom:16px}
+
+/* [C3] Vùng log cuộn + kiểu từng loại dòng (JS chỉ gắn class, không gắn style) */
+#log{height:320px;overflow-y:auto;padding-right:6px;margin-bottom:10px;font-size:14.5px;line-height:1.55;
+  scrollbar-width:thin;scrollbar-color:var(--ink) var(--paper)}
+/* [FIX-06] word-break:break-word lỗi thời -> overflow-wrap; dòng trống nay có chiều cao thật (trước đây cao 0px). */
+.line{white-space:pre-wrap;overflow-wrap:anywhere;margin-bottom:2px}
+.line:empty{min-height:1.55em}
+.sys,.tag,.reply-note{color:var(--grey)}
+.reply-main{font-weight:700}
+.reply-note{padding-left:16px;font-size:13px;margin-bottom:10px}
+/* [FIX-05] Đã xóa CSS chết/hiệu ứng CRT: .cursor, @keyframes blink, flicker, scanline. */
+
+/* [C4] Hàng nhập (ẩn tới khi boot xong), ô input, chân trang, màn nhỏ, giảm chuyển động */
+.input-row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--ink);padding-top:10px;opacity:0;transition:opacity .4s ease}
+.input-row.ready{opacity:1}
+.prompt-label{font-weight:700;white-space:nowrap}
+#userInput{flex:1;min-width:0;background:transparent;border:none;color:var(--ink);font:15px var(--font);caret-color:var(--ink)}
+#userInput:focus{outline:none}
+#userInput:focus-visible{outline:2px solid var(--ink);outline-offset:3px}   /* đặt SAU :focus để không bị đè (cùng độ ưu tiên) */
+#userInput::placeholder{color:var(--grey)}
+#userInput:disabled{opacity:.4}
+.footer{margin-top:12px;font-size:11px;color:var(--grey);display:flex;justify-content:space-between;gap:8px}
+@media (max-width:480px){h1{font-size:36px}#log{height:280px;font-size:13.5px}}
+@media (prefers-reduced-motion:reduce){.input-row{transition:none}}
+</style>
+</head>
+<body>
+
+<!-- [H1] Cấu trúc giao diện: topbar > h1 > subtitle > #log > form#inputRow > footer. Chữ tĩnh sửa trực tiếp tại đây. -->
+<div class="terminal">
+  <div class="topbar">
+    <span>TERMINAL &middot; <b>WHATWEB</span>  <!-- [FIX-07] thêm khoảng trắng sau "TERMINAL" -->
+    <button class="hangup" id="hangupBtn" type="button">BUTTON</button>
+  </div>
+  <h1>WHATWEB</h1>
+  <div class="subtitle">WHATWEB &mdash; the first one</div>
+  <div id="log"></div>
+  <!-- [FIX-08] dùng <form> để Enter gửi đúng cả khi gõ bằng bộ gõ tiếng Việt. [FIX-09] maxlength. [FIX-07] "INPUTT>" -> "INPUT>", có <label for>. -->
+  <form class="input-row" id="inputRow" autocomplete="off">
+    <label class="prompt-label" for="userInput">INPUT&gt;</label>
+    <input id="userInput" maxlength="200" spellcheck="false" placeholder="gõ vào đây rồi nhấn Enter..." disabled>
+  </form>
+  <div class="footer"><span id="clock">TIME TO CONNECTION 00:00</span><span>1200/75 WORDS</span></div>
+</div>
+
+<script>
+// [J1] CONFIG: mọi chuỗi/độ trễ do JS tạo ra nằm ở đây. [FIX-14] trước đây rải rác trong hàm.
+const CONFIG = {
+  bootLines: ["HELLO,", "HAVE A NICE DAY. :)"],
+  hint: "Text and Enter.",
+  youTag: "YOU> ",
+  WHATWEBTag: "WHATWEB> ",
+  noteArrow: "→ ",
+  clockLabel: "TIME TO CONNECTION",
+  speedBoot: 14, speedReply: 18,   // ms mỗi ký tự
+  thinkDelay: 300, bootPause: 180  // ms
+};
+
+// [J2] Dữ liệu: danh mục từ khóa -> câu đáp. [FIX-14] field `fr` đổi thành `reply` (nội dung hiện không phải tiếng Pháp).
+// keywords: gõ không dấu/chữ thường, khớp theo TỪ NGUYÊN VẸN (xem J3). Nội dung câu giữ nguyên như bản 01.
+const phraseBank = [
+  { name: "xinchao",  keywords: ["chao","hi","bonjour","hello","cc","chao ban","hallo", "wtf"],
+    entries: [{ reply: "Hallo, was ist der neu?", vi: "Chàoo, có gì mới à?" }] },
+  { name: "thoitiet", keywords: ["thoi tiet","mua","nang","lanh","nong","weather"],
+    entries: [{ reply: "Erm...", vi: "À..." }] },
+  { name: "cv",       keywords: ["cong viec","lam viec","di lam","project","work","deadline","sep","du an"],
+    entries: [{ reply: "Ich bin auch~ Sehr muede... Bist du bestchaeftig?", vi: "Tui cũng vậy, mệt vãi ò... Bận lắm à?" }] },
+  { name: "hacker",   keywords: ["hack","pentest","mat khau","password","may tinh"],
+    entries: [{ reply: "Oh.", vi: "Ngầu à nhen." }] }
+];
+const fallbackBank = [   // dùng khi không danh mục nào khớp
+  { reply: "...", vi: "..." }, { reply: "?", vi: "?" }, { reply: "!!", vi: "!!" },
+  { reply: "@@", vi: "Ok, then." }, { reply: "Hmmmm.", vi: "Hmmmmmmmmmm." }
+];
+
+// [J3] So khớp: chuẩn hóa -> tách từ -> tìm cụm từ khóa -> chọn ngẫu nhiên.
+// [FIX-10] Bản cũ dùng includes() trên chuỗi con: "người"->"ngu", "ghi"->"hi", "nhiều"->"hi" đều khớp nhầm.
+// Nay đệm khoảng trắng hai đầu và so cả TỪ: " nguoi ta " không chứa " ngu ".
+function normalize(s){   // bỏ dấu + chữ thường (đã bỏ replace(/Đ/) dư vì toLowerCase đã đổi Đ -> đ)
+  return s.toLowerCase().replace(/đ/g, "d").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+const asWords = s => " " + normalize(s).replace(/[^\p{L}\p{N}]+/gu, " ").trim() + " ";
+const BANK = phraseBank.map(c => ({ ...c, keys: c.keywords.map(asWords) }));   // chuẩn hóa từ khóa 1 lần
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+function pickReply(raw){
+  const text = asWords(raw);
+  const hits = BANK.filter(c => c.keys.some(k => text.includes(k)));
+  return pick(hits.length ? pick(hits).entries : fallbackBank);   // trùng nhiều danh mục: chọn ngẫu nhiên (giữ như bản 01)
+}
+
+// [J4] Tham chiếu DOM + helper dựng dòng/gõ chữ + cơ chế hủy tác vụ dở khi bấm nút reset
+const $ = id => document.getElementById(id);
+const log = $("log"), inputRow = $("inputRow"), userInput = $("userInput"), hangupBtn = $("hangupBtn"), clockEl = $("clock");
+const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;   // [FIX-13] đọc mỗi lần, không chốt 1 lần
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const toBottom = () => { log.scrollTop = log.scrollHeight; };
+let session = 0;   // [FIX-11] tăng mỗi lần reset; tác vụ async cũ thấy sid khác session thì tự dừng
+function span(cls, text){ const s = document.createElement("span"); s.className = cls; s.textContent = text; return s; }
+function addLine(cls, text = ""){ const d = document.createElement("div"); d.className = "line " + cls; d.textContent = text; log.append(d); toBottom(); return d; }
+async function typeInto(el, text, speed, sid){   // [FIX-13] một hàm gõ chữ thay cho hai vòng for lặp
+  if (reducedMotion()){ el.textContent = text; return sid === session; }
+  for (let i = 1; i <= text.length; i++){
+    if (sid !== session) return false;
+    el.textContent = text.slice(0, i); toBottom(); await sleep(speed);
+  }
+  return sid === session;
+}
+
+// [J5] Luồng hội thoại: runBoot (lời chào) và handleSubmit (người dùng -> WHATWEB)
+async function runBoot(){
+  const sid = session;
+  for (const text of CONFIG.bootLines){
+    if (!(await typeInto(addLine("sys"), text, CONFIG.speedBoot, sid))) return;
+    await sleep(reducedMotion() ? 0 : CONFIG.bootPause);
+    if (sid !== session) return;
+  }
+  addLine("sys"); addLine("sys", CONFIG.hint); addLine("sys");
+  inputRow.classList.add("ready"); userInput.disabled = false; userInput.focus();
+}
+async function handleSubmit(ev){
+  ev.preventDefault();
+  const text = userInput.value.trim();
+  if (!text) return;
+  const sid = session;
+  userInput.value = ""; userInput.disabled = true;
+
+  addLine("you").append(span("tag", CONFIG.youTag), text);   // append(chuỗi) tạo text node: an toàn, không HTML injection
+  toBottom();
+  await sleep(CONFIG.thinkDelay);
+  if (sid !== session) return;
+
+  const reply = pickReply(text), line = addLine("WHATWEB"), main = span("reply-main", "");
+  line.append(span("tag", CONFIG.WHATWEBTag), main);
+  if (!(await typeInto(main, reply.reply, CONFIG.speedReply, sid))) return;
+  addLine("reply-note", CONFIG.noteArrow + reply.vi);
+  userInput.disabled = false; userInput.focus();
+}
+
+// [J6] Gắn sự kiện, đồng hồ, khởi động
+inputRow.addEventListener("submit", handleSubmit);   // [FIX-08] submit thay cho keydown Enter
+let startedAt = Date.now();
+function renderClock(){   // [FIX-12] tính từ Date.now(): không trôi, có khoảng trắng, reset được
+  const s = Math.floor((Date.now() - startedAt) / 1000), p = n => String(n).padStart(2, "0");
+  clockEl.textContent = `${CONFIG.clockLabel} ${p(Math.floor(s / 60))}:${p(s % 60)}`;
+}
+hangupBtn.addEventListener("click", () => {
+  session++;                              // hủy mọi tác vụ đang gõ dở
+  log.replaceChildren(); userInput.value = "";
+  inputRow.classList.remove("ready"); userInput.disabled = true;
+  startedAt = Date.now(); renderClock();
+  runBoot();
+});
+setInterval(renderClock, 1000);
+runBoot();
+</script>
+</body>
+</html>
