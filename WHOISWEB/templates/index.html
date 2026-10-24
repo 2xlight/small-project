@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payload Lab</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<!-- [H01] Header: tên site (#site-title, đổi được bằng lệnh title) -->
+<header><h1 id="site-title">Payload Lab</h1></header>
+<main>
+<!-- [H02] Ô giữa nạp payload (#exec-form) + console in kết quả (#console) -->
+<section class="center">
+<h2 id="hero">NẠP PAYLOAD CỦA BẠN VÔ ĐI</h2>
+<form id="exec-form"><input id="exec-input" maxlength="300" autocomplete="off" placeholder="gõ help để xem lệnh" required><button>Nạp</button></form>
+<pre id="console" aria-live="polite"></pre>
+</section>
+<!-- [H03] Form đăng bài text/ảnh, không cần đăng nhập -->
+<form id="post-form" class="composer">
+<textarea name="body" maxlength="500" placeholder="Viết gì đó, hoặc chỉ chọn ảnh"></textarea>
+<div class="row"><input type="file" name="image" accept="image/png,image/jpeg,image/gif,image/webp"><button>Đăng bài</button></div>
+</form>
+<!-- [H04] Bộ lọc + vùng feed (JS đổ bài vào #feed) -->
+<nav id="filters" class="row"><button data-f="all" class="on">Tất cả</button><button data-f="text">Chỉ text</button><button data-f="image">Chỉ ảnh</button></nav>
+<section id="feed"></section>
+</main>
+<script src="/static/app.js" defer></script></body></html>

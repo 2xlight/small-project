@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WHOISWEB</title>
+<style>
+/* Font + Reset + Background + Biến CSS đầy đủ */
+:root{
+  --paper: #fff;
+  --ink: #000;
+  --grey: #555;
+  --accent: #0066cc;
+  --card: #f9f9f9;
+  --text: #222;
+  --muted: #888;
+  --danger: #cc0000;
+  --font: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;padding:20px;min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;background:var(--paper);color:var(--text);font-family:var(--font)}
+header{width:100%;max-width:700px;padding:14px 24px;border-bottom:2px solid var(--accent);display:flex;justify-content:space-between;align-items:center}
+h1,h2{font-family:Georgia,"Times New Roman",serif}
+h1{margin:0;font-size:1.15em;color:var(--accent)}
+main{width:100%;max-width:700px;margin:0 auto;padding:20px}
+
+/* [C03] Ô nạp payload ở giữa + console */
+.center{padding:44px 0 30px;text-align:center}
+.center h2{margin:0 0 16px;font-size:1.9em;line-height:1.15}
+#exec-form{display:flex;gap:8px}
+input,textarea,button{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--muted);border-radius:3px;padding:9px 12px}
+#exec-input{flex:1;border:2px solid var(--accent);font-family:ui-monospace,Consolas,monospace}
+button{cursor:pointer}
+button:hover,button.on{border-color:var(--accent);color:var(--accent)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#console{margin:12px 0 0;padding:10px 12px;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--card);border-left:4px solid var(--muted);font:.9em ui-monospace,Consolas,monospace;min-height:2.6em}
+#console.ok{border-color:var(--accent)}
+#console.err{border-color:var(--danger);color:var(--danger)}
+
+/* [C04] Form đăng bài, bộ lọc, thẻ bài, comment */
+.composer{display:grid;gap:8px;margin-bottom:18px}
+textarea{min-height:72px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#filters{margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--muted);border-left:4px solid var(--accent);border-radius:2px;padding:12px 14px;margin-bottom:12px}
+.card.image{border-left-color:var(--text)}
+.card img{max-width:100%;display:block;margin:8px 0}
+.card p{margin:8px 0;overflow-wrap:anywhere}
+.head{display:flex;justify-content:space-between;gap:8px;font-size:.85em}
+.muted{color:var(--muted)}
+.bar{display:flex;gap:8px}
+.comments{margin:8px 0 0;padding-left:18px;color:var(--muted)}
+.cform{display:flex;gap:6px;margin-top:8px}
+.cform input{flex:1}
+</style>
+</head>
+<body>
+
+  <header>
+    <h1 id="site-title">WHOISWEB</h1>
+  </header>
+
+  <main>
+    <section class="center">
+      <h2 id="hero">what is goin on ???</h2>
+      <form id="exec-form">
+        <input id="exec-input" type="text" placeholder="Nhập lệnh hoặc payload..." required>
+        <button type="submit">do it !</button>
+      </form>
+      <div id="console">everything's alright~</div>
+    </section>
+
+    <section class="composer">
+      <form id="post-form" class="row">
+        <textarea name="body" placeholder="Nội dung bài viết..." required></textarea>
+        <button type="submit">post</button>
+      </form>
+    </section>
+
+    <div id="filters" class="row">
+      <button class="on" data-f="all">Alles</button>
+      <button data-f="text">Text</button>
+      <button data-f="image">Pic</button>
+    </div>
+
+    <section id="feed">
+      <!-- Các bài viết sẽ được render ở đây -->
+    </section>
+  </main>
+
+  <script>
+    // [J01] State giao diện (lưu localStorage) + áp dụng theme/font/title/hero
+    const $ = s => document.querySelector(s);
+    const DEFT = {title: "WHOISWEB", hero: "what is goin on ???"};
+    const DEF = {vars: {}, font: null, title: null, hero: null, rep: []};
+    let st = {...DEF, ...JSON.parse(localStorage.getItem("st") || "{}")};
+
+    function applyState() {
+      const r = document.documentElement.style; 
+      r.cssText = "";
+      for (const [k, v] of Object.entries(st.vars))
+        if (/^--(bg|card|text|accent|muted)$/.test(k)) r.setProperty(k, v);
+      if (st.font) r.setProperty("--fs", st.font + "px");
+      if ($("#site-title")) $("#site-title").textContent = st.title || DEFT.title;
+      if ($("#hero")) $("#hero").textContent = st.hero || DEFT.hero;
+      replaceAll();
+    }
+
+    // [J02] Lệnh "replace": thay chữ trên mọi text node
+    const orig = new WeakMap();
+    function replaceAll() {
+      const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      for (let n; (n = w.nextNode());) {
+        if (n.parentElement.closest("script,style,textarea,#console")) continue;
+        if (!orig.has(n)) orig.set(n, n.nodeValue);
+        n.nodeValue = st.rep.reduce((s, x) => s.split(x.a).join(x.b), orig.get(n));
+      }
+      document.title = st.title || DEFT.title;
+    }
+
+    // [J03] Nhận "hiệu ứng" từ server và cập nhật state
+    function applyFx(fx) {
+      for (const e of fx) {
+        if (e.t === "vars") Object.assign(st.vars, e.v);
+        else if (e.t === "font") st.font = e.v;
+        else if (e.t === "title" || e.t === "hero") st[e.t] = e.v;
+        else if (e.t === "replace") st.rep.push({a: e.a, b: e.b});
+        else if (e.t === "reset") st = structuredClone(DEF);
+      }
+      localStorage.setItem("st", JSON.stringify(st)); 
+      applyState();
+    }
+
+    // [J04] Form nạp payload: gửi /api/exec, in kết quả ra console
+    $("#exec-form").onsubmit = async ev => {
+      ev.preventDefault();
+      const input = $("#exec-input").value;
+      try {
+        const r = await fetch("/api/exec", {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify({input})});
+        const d = await r.json().catch(() => ({ok: false, out: "Lỗi server."}));
+        $("#console").textContent = `$ ${input}\n${d.out}`;
+        $("#console").className = r.ok && d.ok ? "ok" : "err";
+        if (d.fx) applyFx(d.fx);
+      } catch (err) {
+        $("#console").textContent = `$ ${input}\nLỗi kết nối đến server.`;
+        $("#console").className = "err";
+      }
+    };
+
+    // [J05] Render feed + nút Like/Comment
+    const el = (t, c, txt) => { 
+      const e = document.createElement(t); 
+      if (c) e.className = c; 
+      if (txt != null) e.textContent = txt; 
+      return e; 
+    };
+    const post = (url, body) => fetch(url, {method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(body || {})});
+    let filter = "all";
+
+    function card(p) {
+      const c = el("article", "card " + p.kind), h = el("div", "head");
+      h.append(el("strong", "", (p.kind === "image" ? "Ảnh" : "Text") + " #" + p.id), el("span", "muted", new Date(p.ts * 1000).toLocaleString("vi-VN")));
+      c.append(h);
+      if (p.image) { 
+        const i = el("img"); 
+        i.src = "/uploads/" + encodeURIComponent(p.image); 
+        i.alt = "Ảnh của bài " + p.id; 
+        c.append(i); 
+      }
+      if (p.body) c.append(el("p", "", p.body));
+      const bar = el("div", "bar"), cb = el("button", "", "Comment");
+      if (p.kind === "text") {                       
+        const lb = el("button", "", "Like " + p.likes);
+        lb.onclick = async () => { await post(`/api/posts/${p.id}/like`); load(); };
+        bar.append(lb);
+      }
+      bar.append(cb); c.append(bar);
+      const list = el("ul", "comments"); 
+      if (p.comments) p.comments.forEach(t => list.append(el("li", "", t))); 
+      c.append(list);
+      const f = el("form", "cform"), inp = el("input"); 
+      f.hidden = true; 
+      inp.maxLength = 200; 
+      inp.placeholder = "Viết comment";
+      f.append(inp, el("button", "", "Gửi")); 
+      c.append(f);
+      f.onsubmit = async ev => { 
+        ev.preventDefault(); 
+        if (inp.value.trim()) { 
+          await post(`/api/posts/${p.id}/comments`, {body: inp.value}); 
+          load(); 
+        } 
+      };
+      cb.onclick = () => { f.hidden = !f.hidden; inp.focus(); };
+      return c;
+    }
+
+    async function load() {
+      try {
+        const res = await fetch("/api/posts?filter=" + filter);
+        const posts = await res.json();
+        const feed = $("#feed");
+        if (feed) {
+          feed.replaceChildren(...(posts.length ? posts.map(card) : [el("p", "muted", "Chưa có bài nào. Hãy đăng bài đầu tiên.")]));
+        }
+        replaceAll();
+      } catch (e) {
+        console.error("Không tải được feed:", e);
+      }
+    }
+
+    // [J06] Đăng bài (FormData) + bộ lọc + khởi động
+    const postForm = $("#post-form");
+    if (postForm) {
+      postForm.onsubmit = async ev => {
+        ev.preventDefault();
+        const r = await fetch("/api/posts", {method: "POST", body: new FormData(ev.target)});
+        if (!r.ok) { alert((await r.json().catch(() => ({}))).error || "Không đăng được bài."); return; }
+        ev.target.reset(); 
+        load();
+      };
+    }
+
+    document.querySelectorAll("#filters button").forEach(b => b.onclick = () => {
+      filter = b.dataset.f;
+      document.querySelectorAll("#filters button").forEach(x => x.classList.toggle("on", x === b));
+      load();
+    });
+
+    applyState(); 
+    load();
+  </script>
+</body>
+</html>

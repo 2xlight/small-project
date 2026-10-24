@@ -1,0 +1,34 @@
+/* [C01] Biến màu/cỡ chữ mặc định (lệnh theme/color/font ghi đè các biến này) */
+:root{--bg:#e8edef;--card:#fbfcfc;--text:#17262e;--accent:#0b6e78;--muted:#6b7c85;--danger:#b3261e;--fs:16px}
+[hidden]{display:none!important}
+/* [C02] Layout chung, header, kiểu chữ */
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:var(--fs)/1.6 system-ui,sans-serif}
+header{padding:14px 24px;border-bottom:2px solid var(--accent)}
+h1,h2{font-family:Georgia,"Times New Roman",serif}
+h1{margin:0;font-size:1.15em;color:var(--accent)}
+main{max-width:700px;margin:0 auto;padding:20px}
+/* [C03] Ô nạp payload ở giữa + console */
+.center{padding:44px 0 30px;text-align:center}
+.center h2{margin:0 0 16px;font-size:1.9em;line-height:1.15}
+#exec-form{display:flex;gap:8px}
+input,textarea,button{font:inherit;color:var(--text);background:var(--card);border:1px solid var(--muted);border-radius:3px;padding:9px 12px}
+#exec-input{flex:1;border:2px solid var(--accent);font-family:ui-monospace,Consolas,monospace}
+button{cursor:pointer}button:hover,button.on{border-color:var(--accent);color:var(--accent)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+#console{margin:12px 0 0;padding:10px 12px;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--card);border-left:4px solid var(--muted);font:.9em ui-monospace,Consolas,monospace;min-height:2.6em}
+#console.ok{border-color:var(--accent)}#console.err{border-color:var(--danger);color:var(--danger)}
+/* [C04] Form đăng bài, bộ lọc, thẻ bài, comment */
+.composer{display:grid;gap:8px;margin-bottom:18px}
+textarea{min-height:72px;resize:vertical}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#filters{margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--muted);border-left:4px solid var(--accent);border-radius:2px;padding:12px 14px;margin-bottom:12px}
+.card.image{border-left-color:var(--text)}
+.card img{max-width:100%;display:block;margin:8px 0}
+.card p{margin:8px 0;overflow-wrap:anywhere}
+.head{display:flex;justify-content:space-between;gap:8px;font-size:.85em}
+.muted{color:var(--muted)}
+.bar{display:flex;gap:8px}
+.comments{margin:8px 0 0;padding-left:18px;color:var(--muted)}
+.cform{display:flex;gap:6px;margin-top:8px}.cform input{flex:1}
