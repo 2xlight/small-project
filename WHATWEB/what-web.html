@@ -59,8 +59,8 @@ h1{font-size:48px;line-height:1;letter-spacing:.03em;margin:2px 0}
 <!-- [H1] Cấu trúc giao diện: topbar > h1 > subtitle > #log > form#inputRow > footer. Chữ tĩnh sửa trực tiếp tại đây. -->
 <div class="terminal">
   <div class="topbar">
-    <span>TERMINAL &middot; <b>WHATWEB</span> 
-    <button class="hangup" id="hangupBtn" type="button">BUTTON</button>
+    <span>CHATTING &middot; <b>WHATWEB</span> 
+    <button class="hangup" id="hangupBtn" type="button">RESET</button>
   </div>
   <h1>WHATWEB</h1>
   <div class="subtitle">WHATWEB &mdash; the first one</div>
@@ -93,11 +93,11 @@ const CONFIG = {
   helpHeader: "THIS:",
   historyEmpty: "Hmmm... have no any history btw.",
   gameHint: "TEXT and ENTER. (/exit for EXIT)",
-  gameInvalidChoice: name => 'Tch... invalid choice, ${name}.',
+  gameInvalidChoice: name => `Tch... invalid choice, ${name}.`,
   gameLocked: "I will meet you tommorow, haha.",
   gameQuit: "You get a kickass, just can chat now.",
   gameFarewell: name => `Cya, ${name}.`,
-  chatExitMsg: "Verbindung kappen. BUTTON for again.",
+  chatExitMsg: "Verbindung kappen. RESET for again.",
 };
 
 // [J2] Dữ liệu: danh mục từ khóa -> câu đáp. [FIX-14] field `fr` đổi thành `reply` (nội dung hiện không phải tiếng Pháp).
