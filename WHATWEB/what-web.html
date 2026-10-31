@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WHATWEB TITLE</title>
+<title>DID YOU GET LOST ?</title>
 <style>
 /* Font + Reset + Background */
 :root{
@@ -59,16 +59,16 @@ h1{font-size:48px;line-height:1;letter-spacing:.03em;margin:2px 0}
 <!-- [H1] Cấu trúc giao diện: topbar > h1 > subtitle > #log > form#inputRow > footer. Chữ tĩnh sửa trực tiếp tại đây. -->
 <div class="terminal">
   <div class="topbar">
-    <span>CHATTING &middot; <b>WHATWEB</span> 
+    <span>Chatting &middot; <b>Did you get lost?</span> 
     <button class="hangup" id="hangupBtn" type="button">RESET</button>
   </div>
-  <h1>WHATWEB</h1>
-  <div class="subtitle">WHATWEB &mdash; the first one</div>
+  <h1>DID YOU GET LOST ?</h1>
+  <div class="subtitle">Welcome to my web.</div>
   <div id="log"></div>
   <!-- [FIX-08] dùng <form> để Enter gửi đúng cả khi gõ bằng bộ gõ tiếng Việt. [FIX-09] maxlength. [FIX-07] "INPUTT>" -> "INPUT>", có <label for>. -->
   <form class="input-row" id="inputRow" autocomplete="off">
-    <label class="prompt-label" for="userInput">INPUT&gt;</label>
-    <input id="userInput" maxlength="200" spellcheck="false" placeholder="gõ vào đây rồi nhấn Enter..." disabled>
+    <label class="prompt-label" for="userInput">HERE &gt;</label>
+    <input id="userInput" maxlength="200" spellcheck="false" placeholder="Input and Enter..." disabled>
   </form>
   <div class="footer"><span id="clock">TIME TO CONNECTION 00:00</span><span>1200/75 WORDS</span></div>
 </div>
@@ -76,22 +76,22 @@ h1{font-size:48px;line-height:1;letter-spacing:.03em;margin:2px 0}
 <script>
 // [J1] CONFIG: mọi chuỗi/độ trễ do JS tạo ra nằm ở đây. [FIX-14] trước đây rải rác trong hàm.
 const CONFIG = {
-  bootLines: ["HELLO,", "HAVE A NICE DAY. :)"],
+  bootLines: ["HALLO,", "HAVE A NICE DAY. :)"],
   hint: "Text and Enter.",
-  youTag: "YOU> ",
-  WHATWEBTag: "WHATWEB> ",
+  youTag: "YOU > ",
+  WHATWEBTag: "ARES > ",
   noteArrow: "→ ",
   clockLabel: "TIME TO CONNECTION",
   speedBoot: 14, speedReply: 18,   // ms mỗi ký tự
   thinkDelay: 300, bootPause: 180,  // ms
 
-  defaultName: "USER",
-  namePrompt: "WHAT SHOULD I CALL YOU, BAE~ (OR JUST ENTER -_-)",
-  nameGreeting: name => `HALLOOO ${name}.`,
-  nameChanged: name => `YOUR NAME IS "${name}".`,
-  unknownCommand: cmd => `USE "/${cmd}" FOR COMMAND. (/help)`,
-  helpHeader: "THIS:",
-  historyEmpty: "Hmmm... have no any history btw.",
+  defaultName: "User",
+  namePrompt: "What should I call you, user?",
+  nameGreeting: name => `${name} ? I appreciate that, welcome ${name}.`,
+  nameChanged: name => `Your name is "${name}".`,
+  unknownCommand: cmd => `"/${cmd}" is invalid, but (/help) is valid.`,
+  helpHeader: "Command:",
+  historyEmpty: "History is empty.",
   gameHint: "TEXT and ENTER. (/exit for EXIT)",
   gameInvalidChoice: name => `Tch... invalid choice, ${name}.`,
   gameLocked: "I will meet you tommorow, haha.",
